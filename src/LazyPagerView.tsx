@@ -27,24 +27,6 @@ type RenderWindowData = {
   windowLength: number;
 };
 
-function debounce(func: () => void, wait: number) {
-  var timeout: NodeJS.Timeout | null;
-  return function () {
-    // @ts-ignore
-    // eslint-disable-next-line consistent-this
-    const context = this,
-      args: any = arguments;
-    var later = function () {
-      timeout = null;
-      func.apply(context, args);
-    };
-    if (timeout) {
-      clearTimeout(timeout);
-    }
-    timeout = setTimeout(later, wait);
-  };
-}
-
 /**
  * PagerView implementation that renders pages when needed (lazy loading)
  */
@@ -84,6 +66,7 @@ class LazyPagerViewImpl<ItemT> extends React.Component<
   private isScrolling = false;
   private animationFrameRequestId?: number;
   private currentPage?: number;
+  private prevCurrentPage?: number;
   private isScrollIdle: boolean = true;
 
   constructor(props: LazyPagerViewImplProps<ItemT>) {
@@ -237,23 +220,21 @@ class LazyPagerViewImpl<ItemT> extends React.Component<
     if (this.props.keyboardDismissMode === 'on-drag') {
       Keyboard.dismiss();
     }
-    this.renderNextPage();
   };
 
   private renderNextPage = () => {
-    debounce(() => {
-      if (this.isScrollIdle) {
-        this.setState((prevState) =>
-          this.computeRenderWindow({
-            buffer: this.props.buffer,
-            currentPage: this.currentPage as number,
-            maxRenderWindow: this.props.maxRenderWindow,
-            offset: prevState.offset,
-            windowLength: prevState.windowLength,
-          })
-        );
-      }
-    }, 100);
+    if (this.isScrollIdle && this.prevCurrentPage !== this.currentPage) {
+      this.setState((prevState) =>
+        this.computeRenderWindow({
+          buffer: this.props.buffer,
+          currentPage: this.currentPage as number,
+          maxRenderWindow: this.props.maxRenderWindow,
+          offset: prevState.offset,
+          windowLength: prevState.windowLength,
+        })
+      );
+      this.prevCurrentPage = this.currentPage;
+    }
   };
 
   private onPageScrollStateChanged = (
