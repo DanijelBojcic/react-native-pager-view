@@ -237,24 +237,23 @@ class LazyPagerViewImpl<ItemT> extends React.Component<
     if (this.props.keyboardDismissMode === 'on-drag') {
       Keyboard.dismiss();
     }
+    this.renderNextPage();
   };
 
   private renderNextPage = () => {
-    if (this.isScrollIdle) {
-      debounce(
-        () =>
-          this.setState((prevState) =>
-            this.computeRenderWindow({
-              buffer: this.props.buffer,
-              currentPage: this.currentPage as number,
-              maxRenderWindow: this.props.maxRenderWindow,
-              offset: prevState.offset,
-              windowLength: prevState.windowLength,
-            })
-          ),
-        100
-      );
-    }
+    debounce(() => {
+      if (this.isScrollIdle) {
+        this.setState((prevState) =>
+          this.computeRenderWindow({
+            buffer: this.props.buffer,
+            currentPage: this.currentPage as number,
+            maxRenderWindow: this.props.maxRenderWindow,
+            offset: prevState.offset,
+            windowLength: prevState.windowLength,
+          })
+        );
+      }
+    }, 100);
   };
 
   private onPageScrollStateChanged = (
